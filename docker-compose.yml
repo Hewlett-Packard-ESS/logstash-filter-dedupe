@@ -3,3 +3,9 @@ devenv:
   entrypoint: /bin/bash
   volumes:
     - ./:/storage
+  links: 
+    - 'redis'
+
+redis:
+  image: hpess/redis:master
+  hostname: 'redis'
