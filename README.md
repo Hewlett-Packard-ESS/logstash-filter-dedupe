@@ -4,7 +4,7 @@ __NOTE__: Work in progress and most def not working right now!
 
 This is a plugin for [Logstash](https://github.com/elasticsearch/logstash) which is designed to handle the de-duplication of events coming into a Logstash cluster in a HA architecture.
 
-We achieve this by hashing the fields you wish to dedupe on and store those in a Redis instance which we then check again.  Should a match be found, we will tag it.  You can then go on to drop {} it, or something similar.
+We achieve this by hashing the fields you wish to dedupe on and store those in a data store which we then check against.  Should a match be found, we will tag it.  You can then go on to drop {} it, or something similar.
 
 The README from this point down is primarily from the plugin template for a README.
 
