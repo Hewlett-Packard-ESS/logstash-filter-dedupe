@@ -1,0 +1,5 @@
+devenv:
+  build: ./
+  entrypoint: /bin/bash
+  volumes:
+    - ./:/storage
