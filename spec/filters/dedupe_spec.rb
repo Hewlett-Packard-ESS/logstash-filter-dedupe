@@ -69,7 +69,34 @@ describe LogStash::Filters::DeDupe do
         insist { subject['tags'] } == ['duplicate']
       end
     end
+  end
 
+  context 'Allows for different key orders' do
+    config <<-CONFIG
+      filter {
+        dedupe {
+          keys => ["a", "b"]
+        }
+      }
+    CONFIG
+
+    context 'the first one shouldnt be a duplicate' do
+      sample({
+        "a" => "hi",
+        "b" => "there"
+      }) do
+        insist { subject['tags'] } == nil
+      end
+    end
+
+    context 'the second one should be detected as a duplicate' do
+      sample({
+        "b" => "there",
+        "a" => "hi"
+      }) do
+        insist { subject['tags'] } == ['duplicate']
+      end
+    end
   end
 
 end
