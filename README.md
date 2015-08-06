@@ -26,6 +26,15 @@ filter {
 ```
 The above settings are pretty simple, the only one to be wary of is `ttl`, this setting basically controls how long the duplication information is stored in redis before it is dropped, that's basically your "duplication window".
 
+Any messages which are "duplicates" will have the "duplicate" tag added, you could then go on to drop that message with the drop filter:
+```
+filter {
+  if "duplicate" in [tags] {
+    drop {}
+  }
+}
+```
+
 ## Plugin Developement and Testing
 You can use a docker container with all of the requirements pre installed to save you installing the development environment on your host.
 
