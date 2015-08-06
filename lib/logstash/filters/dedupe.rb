@@ -40,7 +40,7 @@ class LogStash::Filters::DeDupe < LogStash::Filters::Base
   public 
   def tag_processed(hash, keys) 
     # Generate a flat md5 of the keys in question
-    md5 = generate_md5(hash, *keys)
+    md5 = generate_md5(hash, keys)
     $logger.info "MD5 Generated: #{md5}"
     previous = redis.getset(md5, 1).to_i
     $logger.info "Previous Redis Value:: #{previous}"
@@ -61,8 +61,23 @@ class LogStash::Filters::DeDupe < LogStash::Filters::Base
 
   private
   def generate_md5(event, keys)
-    data = event.slice(keys)
+    data = keys.map{|key|
+      extract_key(event, key)
+    }
     Digest::MD5.hexdigest( keys_flat data )
+  end
+
+  private 
+  # Allows for the extraction of keys which are
+  # defined in a nested way, for example a.b.c
+  def extract_key(obj, key)
+    if obj.respond_to?(:key?) && obj.key?(key)
+      obj[key]
+    elsif obj.respond_to?(:each)
+      r = nil
+      obj.find{ |*a| r=extract_key(a.last,key) }
+      r
+    end
   end
 
   private
