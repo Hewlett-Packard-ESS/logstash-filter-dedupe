@@ -9,10 +9,6 @@ redis = Redis.new({
  
 describe LogStash::Filters::DeDupe do
 
-  before(:all) do
-    redis.flushall
-  end
-
   describe 'Detects a duplicate' do
     config <<-CONFIG
       filter {
@@ -22,11 +18,39 @@ describe LogStash::Filters::DeDupe do
       }
     CONFIG
 
-    sample("id" => "abc") do
+    test_data = {
+      "id" => "1" 
+    }
+ 
+    sample(test_data) do
       insist { subject['tags'] } == nil
     end
 
-    sample("id" => "abc") do
+    sample(test_data) do
+      insist { subject['tags'] } == ['duplicate']
+    end
+  end
+
+  describe 'Allows for deep nested keys' do
+    config <<-CONFIG
+      filter {
+        dedupe {
+          keys => ["some.key"]
+        }
+      }
+    CONFIG
+
+    test_data = {
+      "some" => {
+        "key" => "2"
+      }
+    }
+    
+    sample(test_data) do
+      insist { subject['tags'] } == nil
+    end
+
+    sample(test_data) do
       insist { subject['tags'] } == ['duplicate']
     end
   end
