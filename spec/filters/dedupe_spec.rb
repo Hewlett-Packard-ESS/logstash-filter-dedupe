@@ -14,9 +14,7 @@ describe LogStash::Filters::DeDupe do
   end
 
   before(:all) do
-    puts "flushing redis"
     redis.flushall
-    sleep 1
   end
 
   context 'top level keys' do
