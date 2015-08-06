@@ -6,8 +6,6 @@ This is a plugin for [Logstash](https://github.com/elasticsearch/logstash) which
 
 We achieve this by hashing the fields you wish to dedupe on and store those in a data store which we then check against.  Should a match be found, we will tag it.  You can then go on to drop {} it, or something similar.
 
-The README from this point down is primarily from the plugin template for a README.
-
 ## Quickstart
 For starters, this plugin uses redis as its data store so that you can have multiple logstash nodes sharing the same de-duplication information.  You'll need to download redis and install it somewhere.
 
@@ -34,6 +32,8 @@ filter {
   }
 }
 ```
+
+__NOTE:__ The README from this point down is primarily from the plugin template for a README.
 
 ## Plugin Developement and Testing
 You can use a docker container with all of the requirements pre installed to save you installing the development environment on your host.
