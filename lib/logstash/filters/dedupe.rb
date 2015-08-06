@@ -1,3 +1,4 @@
+require 'logstash/logging'
 require 'logstash/filters/base'
 require 'logstash/namespace'
 require 'redis'
@@ -15,18 +16,16 @@ class LogStash::Filters::DeDupe < LogStash::Filters::Base
 
   public
   def register
+    $logger ||= LogStash::Logger.new(STDOUT)
   end
 
   public
   def filter(event)
     return unless filter?(event)
-
-    # Generate a flat hash of the keys in question
-    hash = generate_hash(event.to_hash)
     
     # Perform a getset which will determine if we've processed
     # this event already
-    previous = redis.getset(hash, 1).to_i
+    previous = tag_processed(event.to_hash, @keys)
 
     if previous == 1
       # Tag it because it was already there
@@ -34,11 +33,20 @@ class LogStash::Filters::DeDupe < LogStash::Filters::Base
       event["tags"] << 'duplicate' unless event["tags"].include?('duplicate')
     end
 
-    # Set the TTL on the key
-    redis.expire(hash, @ttl)
-
     # Dedupe away
     filter_matched(event)
+  end
+
+  public 
+  def tag_processed(hash, keys) 
+    # Generate a flat md5 of the keys in question
+    md5 = generate_md5(hash, *keys)
+    $logger.info "MD5 Generated: #{md5}"
+    previous = redis.getset(md5, 1).to_i
+    $logger.info "Previous Redis Value:: #{previous}"
+    # Set the TTL on the key
+    redis.expire(md5, @ttl)
+    previous
   end
 
   private
@@ -52,9 +60,9 @@ class LogStash::Filters::DeDupe < LogStash::Filters::Base
   end
 
   private
-  def generate_hash(event)
-    keys = event.slice(*@keys)
-    Digest::MD5.hexdigest( keys_flat keys )
+  def generate_md5(event, keys)
+    data = event.slice(keys)
+    Digest::MD5.hexdigest( keys_flat data )
   end
 
   private

@@ -9,7 +9,16 @@ redis = Redis.new({
  
 describe LogStash::Filters::DeDupe do
 
-  describe 'Detects a duplicate' do
+  base = LogStash::Filters::DeDupe.new({})
+  base.register
+ 
+  before(:each) do
+    puts "flushing redis"
+    redis.flushall
+    sleep 1
+  end
+
+  context 'top level keys' do
     config <<-CONFIG
       filter {
         dedupe {
@@ -22,37 +31,21 @@ describe LogStash::Filters::DeDupe do
       "id" => "1" 
     }
  
-    sample(test_data) do
-      insist { subject['tags'] } == nil
+    context 'the first one shouldnt be a duplicate' do
+      sample(test_data) do
+        insist { subject['tags'] } == nil
+      end
     end
 
-    sample(test_data) do
-      insist { subject['tags'] } == ['duplicate']
+    context 'the second one should be detected as a duplicate' do
+      before(:each) do
+        base.tag_processed(test_data, ["id"])
+        sleep 1
+      end
+      sample(test_data) do
+        insist { subject['tags'] } == ['duplicate']
+      end
     end
+
   end
-
-  describe 'Allows for deep nested keys' do
-    config <<-CONFIG
-      filter {
-        dedupe {
-          keys => ["some.key"]
-        }
-      }
-    CONFIG
-
-    test_data = {
-      "some" => {
-        "key" => "2"
-      }
-    }
-    
-    sample(test_data) do
-      insist { subject['tags'] } == nil
-    end
-
-    sample(test_data) do
-      insist { subject['tags'] } == ['duplicate']
-    end
-  end
-
 end
