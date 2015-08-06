@@ -37,18 +37,6 @@ class LogStash::Filters::DeDupe < LogStash::Filters::Base
     filter_matched(event)
   end
 
-  public 
-  def tag_processed(hash, keys) 
-    # Generate a flat md5 of the keys in question
-    md5 = generate_md5(hash, keys)
-    $logger.info "MD5 Generated: #{md5}"
-    previous = redis.getset(md5, 1).to_i
-    $logger.info "Previous Redis Value:: #{previous}"
-    # Set the TTL on the key
-    redis.expire(md5, @ttl)
-    previous
-  end
-
   private
   def redis
     return @redis if not @redis.nil?
@@ -61,9 +49,25 @@ class LogStash::Filters::DeDupe < LogStash::Filters::Base
   end
 
   private
-  def generate_md5(event, keys)
+  # Tags the current event as processed
+  # in redis based on the keys were looking for 
+  def tag_processed(hash, keys) 
+    # Generate a flat md5 of the keys in question
+    md5 = generate_md5(hash, keys)
+    $logger.info "MD5 Generated: #{md5}"
+    previous = redis.getset(md5, 1).to_i
+    $logger.info "Previous Redis Value: #{previous}"
+    # Set the TTL on the key
+    redis.expire(md5, @ttl)
+    previous
+  end
+
+  private
+  # Generates an MD5 sig of the requested keys
+  # from the hash of the event
+  def generate_md5(hash, keys)
     data = keys.map{|key|
-      extract_key(event, key)
+      extract_key(hash, key)
     }
     Digest::MD5.hexdigest( keys_flat data )
   end
