@@ -9,10 +9,11 @@ redis = Redis.new({
  
 describe LogStash::Filters::DeDupe do
 
-  base = LogStash::Filters::DeDupe.new({})
-  base.register
- 
-  before(:each) do
+  RSpec.configure do |config|
+    config.order = :defined
+  end
+
+  before(:all) do
     puts "flushing redis"
     redis.flushall
     sleep 1
@@ -38,10 +39,6 @@ describe LogStash::Filters::DeDupe do
     end
 
     context 'the second one should be detected as a duplicate' do
-      before(:each) do
-        base.tag_processed(test_data, ["id"])
-        sleep 1
-      end
       sample(test_data) do
         insist { subject['tags'] } == ['duplicate']
       end
