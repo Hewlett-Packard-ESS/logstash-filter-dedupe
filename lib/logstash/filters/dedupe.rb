@@ -56,7 +56,8 @@ class LogStash::Filters::DeDupe < LogStash::Filters::Base
       :host => @host, 
       :port => @port
     }
-    Redis.new(redis_config)
+    @redis = Redis.new(redis_config)
+    @redis
   end
 
   private
