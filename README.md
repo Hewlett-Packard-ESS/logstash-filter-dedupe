@@ -8,6 +8,24 @@ We achieve this by hashing the fields you wish to dedupe on and store those in a
 
 The README from this point down is primarily from the plugin template for a README.
 
+## Quickstart
+For starters, this plugin uses redis as its data store so that you can have multiple logstash nodes sharing the same de-duplication information.  You'll need to download redis and install it somewhere.
+
+Next you need to install the plugin with `/opt/logstash/bin/plugin -install logstash-filter-dedupe`
+
+Finally, add the filter in your logstash configuration:
+```
+filter {
+  dedupe {
+    keys => ["keys", "to", "hash"],
+    host => "redis-ip",
+    port => 6379,
+    ttl  => 30
+  }
+}
+```
+The above settings are pretty simple, the only one to be wary of is `ttl`, this setting basically controls how long the duplication information is stored in redis before it is dropped, that's basically your "duplication window".
+
 ## Plugin Developement and Testing
 You can use a docker container with all of the requirements pre installed to save you installing the development environment on your host.
 
