@@ -13,7 +13,11 @@ describe LogStash::Filters::DeDupe do
     CONFIG
 
     sample("id" => "abc") do
-      insist { subject['tags'] }.include?('duplicate')
+      insist { subject['tags'] } == nil
+    end
+
+    sample("id" => "abc") do
+      insist { subject['tags'] } == ['duplicate']
     end
   end
 
